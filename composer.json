@@ -1,46 +1,45 @@
 {
-  "name": "the-systems/route",
-  "type": "library",
-  "description": "Route - Fast, flexible routing for PHP, enabling you to quickly and easily build RESTful web applications.",
-  "keywords": [
-    "route",
-    "restful",
-    "api",
-    "justframework"
-  ],
-  "homepage": "https://nezamy.com/route",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Mahmoud Elnezamy",
-      "email": "mahmoud@nezamy.com",
-      "homepage": "http://nezamy.com",
-      "role": "Full Stack Web Developer"
-    },
-    {
-      "name": "Moritz Walter",
-      "email": "moritz.walter@the-systems.eu",
-      "homepage": "https://the-systems.eu",
-    }
-  ],
-
-  "autoload": {
-    "psr-4": {
-      "Just\\": "src/",
-      "": ""
-    },
-    "files": [
-      "src/functions.php"
-    ]
-  },
-  "require": {
-    "php": ">=8.1",
-    "ext-json": "*",
-    "ext-mbstring": "*",
-    "nezamy/di": "^2.0"
-  },
-  "scripts": {
-    "fix": "php-cs-fixer fix ./src",
-    "test": "phpunit"
-  }
+   "name":"the-systems/route",
+   "type":"library",
+   "description":"Route - Fast, flexible routing for PHP, enabling you to quickly and easily build RESTful web applications.",
+   "keywords":[
+      "route",
+      "restful",
+      "api",
+      "justframework"
+   ],
+   "homepage":"https://nezamy.com/route",
+   "license":"MIT",
+   "authors":[
+      {
+         "name":"Mahmoud Elnezamy",
+         "email":"mahmoud@nezamy.com",
+         "homepage":"http://nezamy.com",
+         "role":"Full Stack Web Developer"
+      },
+      {
+         "name":"Moritz Walter",
+         "email":"moritz.walter@the-systems.eu",
+         "homepage":"https://the-systems.eu"
+      }
+   ],
+   "autoload":{
+      "psr-4":{
+         "Just\\":"src/",
+         "":""
+      },
+      "files":[
+         "src/functions.php"
+      ]
+   },
+   "require":{
+      "php":">=8.1",
+      "ext-json":"*",
+      "ext-mbstring":"*",
+      "nezamy/di":"^2.0"
+   },
+   "scripts":{
+      "fix":"php-cs-fixer fix ./src",
+      "test":"phpunit"
+   }
 }
