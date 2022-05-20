@@ -1,5 +1,5 @@
 {
-  "name": "nezamy/route",
+  "name": "the-systems/route",
   "type": "library",
   "description": "Route - Fast, flexible routing for PHP, enabling you to quickly and easily build RESTful web applications.",
   "keywords": [
@@ -16,6 +16,11 @@
       "email": "mahmoud@nezamy.com",
       "homepage": "http://nezamy.com",
       "role": "Full Stack Web Developer"
+    },
+    {
+      "name": "Moritz Walter",
+      "email": "moritz.walter@the-systems.eu",
+      "homepage": "https://the-systems.eu",
     }
   ],
 
@@ -28,20 +33,11 @@
       "src/functions.php"
     ]
   },
-  "autoload-dev": {
-    "psr-4": {
-      "Just\\Test\\": "tests/"
-    }
-  },
   "require": {
-    "php": ">=7.4",
+    "php": ">=8.1",
     "ext-json": "*",
     "ext-mbstring": "*",
     "nezamy/di": "^2.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^7.5 || ^8.5",
-    "friendsofphp/php-cs-fixer": "^2.16"
   },
   "scripts": {
     "fix": "php-cs-fixer fix ./src",
