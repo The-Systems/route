@@ -12,15 +12,15 @@
    "license":"MIT",
    "authors":[
       {
+         "name":"Moritz Walter",
+         "email":"moritz.walter@the-systems.eu",
+         "homepage":"https://the-systems.eu"
+      },
+      {
          "name":"Mahmoud Elnezamy",
          "email":"mahmoud@nezamy.com",
          "homepage":"http://nezamy.com",
          "role":"Full Stack Web Developer"
-      },
-      {
-         "name":"Moritz Walter",
-         "email":"moritz.walter@the-systems.eu",
-         "homepage":"https://the-systems.eu"
       }
    ],
    "autoload":{
