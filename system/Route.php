@@ -10,9 +10,11 @@
  * @version     1.2.0
  */
 
-namespace System;
+namespace TheSystems\Router;
 
 use Closure;
+use Exception;
+use JetBrains\PhpStorm\NoReturn;
 use System\Support\Str;
 
 /**
@@ -28,7 +30,7 @@ class Route
     /**
      * Named parameters list.
      */
-    protected $pattern = [
+    protected array $pattern = [
         '/*' => '/(.*)',
         '/?' => '/([^\/]+)',
         'int' => '/([0-9]+)',
@@ -41,27 +43,28 @@ class Route
         'multiIsoCode2' => '/([a-z,]{2,})',
         'multiIsoCode3' => '/([a-z,]{3,})'
     ];
-    private $routes = [];
-    private $group = '';
-    private $matchedPath = '';
-    private $matched = false;
-    private $pramsGroup = [];
-    private $matchedArgs = [];
-    private $pattGroup = [];
-    private $fullArg = '';
-    private $isGroup = false;
-    private $groupAs = '';
-    private $currentGroupAs = '';
-    private $currentGroup = [];
+    private array $routes = [];
+    private string $group = '';
+    private string $matchedPath = '';
+    private bool $matched = false;
+    private array $pramsGroup = [];
+    private array $matchedArgs = [];
+    private array $pattGroup = [];
+    private string $fullArg = '';
+    private bool $isGroup = false;
+    private string $groupAs = '';
+    private string $currentGroupAs = '';
+    private array $currentGroup = [];
     private $prams;
     private $currentUri;
-    private $routeCallback = [];
+    private array $routeCallback = [];
     private $patt;
     public $Controller;
     public $Method;
-    private $before = [];
-    private $after = [];
+    private array $before = [];
+    private array $after = [];
 
+    private Request $req;
     /**
      * Constructor - Define some variables.
      * @param Request $req
@@ -78,7 +81,7 @@ class Route
      * @param Request $req
      * @return $this
      */
-    public static function instance(Request $req)
+    public static function instance(Request $req): static
     {
         if (null === static::$instance) {
             static::$instance = new static($req);
@@ -86,17 +89,18 @@ class Route
         return static::$instance;
     }
 
-    /**
-     * Register a route with callback.
-     *
-     * @param array $method
-     * @param string|array $uri
-     * @param callable $callback
-     * @param array $options
-     *
-     * @return $this
-     */
-    public function route(array $method, $uri, $callback, $options = [])
+  /**
+   * Register a route with callback.
+   *
+   * @param array|string $method
+   * @param array|string $uri
+   * @param callable $callback
+   * @param array $options
+   *
+   * @return $this
+   * @throws Exception
+   */
+    public function route(array|string $method, array|string $uri, callable $callback, array $options = []): static
     {
         if (is_array($uri)) {
             foreach ($uri as $u) {
@@ -114,7 +118,7 @@ class Route
         $pattern = $this->namedParameters($uri);
         $this->currentUri = $pattern;
 
-        if ($options['ajaxOnly'] == false || $options['ajaxOnly'] && $this->req->ajax) {
+        if (!$options['ajaxOnly'] || $options['ajaxOnly'] && $this->req->ajax) {
             // If matched before, skip this.
             if ($this->matched === false) {
                 // Prepare.
@@ -123,7 +127,7 @@ class Route
                 );
 
                 // If matched.
-                $method = count($method) > 0 ? in_array($this->req->method, $method) : true;
+                $method = !(count($method) > 0) || in_array($this->req->method, $method);
                 if ($method && $this->matched($pattern)) {
                     if ($this->isGroup) {
                         $this->prams = array_merge($this->pramsGroup, $this->prams);
@@ -147,13 +151,13 @@ class Route
     /**
      * Group of routes.
      *
-     * @param string|array $group
+     * @param array|string $group
      * @param callable $callback
      *
      * @param array $options
      * @return $this
      */
-    public function group($group, callable $callback, array $options = [])
+    public function group(array|string $group, callable $callback, array $options = []): static
     {
         $options = array_merge([
             'as' => $group,
@@ -192,15 +196,13 @@ class Route
         return $this;
     }
 
-    public function resource($uri, $controller, $options = [])
+    public function resource($uri, $controller, $options = []): void
     {
         $options = array_merge([
             'ajaxOnly' => false,
             'idPattern' => ':int',
             'multiIdPattern' => ':multiInt'
         ], $options);
-
-        $controller = $controller;
 
         if (class_exists($controller))
         {
@@ -234,13 +236,15 @@ class Route
             });
 
         } else {
-            throw new \Exception("Not found Controller {$controller} try with namespace");
+            throw new Exception("Not found Controller {$controller} try with namespace");
         }
     }
 
-    public function controller($uri, $controller, $options = [])
-    {
-        $controller = $controller;
+  /**
+   * @throws Exception
+   */
+  public function controller($uri, $controller, $options = []): void
+  {
         if (class_exists($controller))
         {
             $methods = get_class_methods($controller);
@@ -266,7 +270,7 @@ class Route
                 $this->route($request, $fullUri, $call, $options)->_as($as);
             }
         } else {
-            throw new \Exception("Not found Controller {$controller} try with namespace");
+            throw new Exception("Not found Controller {$controller} try with namespace");
         }
     }
 
@@ -278,7 +282,7 @@ class Route
      *
      * @return array
      */
-    protected function bindArgs(array $pram, array $args)
+    protected function bindArgs(array $pram, array $args): array
     {
         if (count($pram) == count($args)) {
             $newArgs = array_combine($pram, $args);
@@ -308,25 +312,25 @@ class Route
      * @param string $uri
      * @param bool $isGroup
      *
-     * @return mixed
+     * @return string|array|null
      */
-    protected function namedParameters($uri, $isGroup = false)
+    protected function namedParameters(string $uri, bool $isGroup = false): string|array|null
     {
         // Reset pattern and parameters to empty array.
         $this->patt = [];
         $this->prams = [];
 
         // Replace named parameters to regex pattern.
-        return preg_replace_callback('/\/\{([a-z-0-9]+)\}\??(:\(?[^\/]+\)?)?/i', function ($m) use ($isGroup) {
+        return preg_replace_callback('/\/\{([a-z-0-9]+)}\??(:\(?[^\/]+\)?)?/i', function ($m) use ($isGroup) {
             // Check whether validation has been set and whether it exists.
             if (isset($m[2])) {
                 $rep = substr($m[2], 1);
-                $patt = isset($this->pattern[$rep]) ? $this->pattern[$rep] : '/' . $rep;
+                $patt = $this->pattern[$rep] ?? '/' . $rep;
             } else {
                 $patt = $this->pattern['/?'];
             }
             // Check whether parameter is optional.
-            if (strpos($m[0], '?') !== false) {
+            if (str_contains($m[0], '?')) {
                 $patt = str_replace('/(', '(/', $patt) . '?';
             }
 
@@ -351,10 +355,10 @@ class Route
      *
      * @return string
      */
-    protected function prepare($patt, $strict = true)
+    protected function prepare(string $patt, bool $strict = true): string
     {
         // Fix group if it has an optional path on start
-        if (substr($patt, 0, 3) == '/(/') {
+        if (str_starts_with($patt, '/(/')) {
             $patt = substr($patt, 1);
         }
 
@@ -369,7 +373,7 @@ class Route
      *
      * @return bool
      */
-    protected function matched($patt, $call = true)
+    protected function matched(string $patt, bool $call = true): bool
     {
         if (preg_match($patt, $this->req->path, $m)) {
             if ($call) {
@@ -389,7 +393,7 @@ class Route
      *
      * @return string
      */
-    protected function removeDuplSlash($uri)
+    protected function removeDuplSlash(string $uri): string
     {
         return preg_replace('/\/+/', '/', '/' . $uri);
     }
@@ -401,7 +405,7 @@ class Route
      *
      * @return string
      */
-    protected function trimSlash($uri)
+    protected function trimSlash(string $uri): string
     {
         return trim($uri, '/');
     }
@@ -411,7 +415,7 @@ class Route
      *
      * @param array $patt key value  i.e ['key' => '/([a-z0-9_]+)']
      */
-    public function addPattern(array $patt)
+    public function addPattern(array $patt): void
     {
         $this->pattern = array_merge($this->pattern, $patt);
     }
@@ -421,9 +425,9 @@ class Route
      *
      * @param string $name
      * @return $this
-     * @throws \Exception
+     * @throws Exception
      */
-    public function _as($name)
+    public function _as(string $name): static
     {
         if (empty($name)) return $this;
         $name = rtrim($this->getGroupAs() . str_replace('/', '.', strtolower($name)), '.');
@@ -462,12 +466,12 @@ class Route
         return $this;
     }
 
-    /**
-     * @param $as
-     * @param bool $replace
-     * @return $this
-     */
-    public function setGroupAs($as, $replace = false)
+  /**
+   * @param string $as
+   * @param bool $replace
+   * @return $this
+   */
+    public function setGroupAs(string $as, bool $replace = false): static
     {
         $as = str_replace('/', '.', $this->trimSlash(strtolower($as)));
         $as = $this->removeParameters($as);
@@ -483,7 +487,7 @@ class Route
     /**
      * @return string
      */
-    public function getGroupAs()
+    public function getGroupAs(): string
     {
         if ($this->groupAs == '')
             return $this->groupAs;
@@ -507,7 +511,7 @@ class Route
      *
      * @return string|null
      */
-    public function getRoute($name, array $args = [])
+    public function getRoute(string $name, array $args = []): ?string
     {
         $name = strtolower($name);
 
@@ -525,22 +529,20 @@ class Route
     /**
      * @return array
      */
-    public function getRoutes()
+    public function getRoutes(): array
     {
         return $this->routes;
     }
 
-    public function _use($callback, $event = 'before')
+    public function _use($callback, $event = 'before'): static
     {
-        switch ($event) {
-            case 'before':
-                return $this->before('/*', $callback);
-            default:
-                return $this->after('/*', $callback);
-        }
+      return match ($event) {
+        'before' => $this->before('/*', $callback),
+        default => $this->after('/*', $callback),
+      };
     }
 
-    public function before($uri, $callback)
+    public function before($uri, $callback): static
     {
         $this->before[] = [
             'uri' => $uri,
@@ -549,7 +551,7 @@ class Route
         return $this;
     }
 
-    public function after($uri, $callback)
+    public function after($uri, $callback): static
     {
         $this->after[] = [
             'uri' => $uri,
@@ -558,13 +560,17 @@ class Route
         return $this;
     }
 
-    protected function emit(array $events) {
+  /**
+   * @throws Exception
+   */
+  protected function emit(array $events): void
+    {
         $continue = true;
         foreach ($events as $cb) {
             if ($continue !== false) {
                 $uri = $cb['uri'];
                 $except = false;
-                if (strpos($cb['uri'], '/*!') !== false){
+                if (str_contains($cb['uri'], '/*!')){
                     $uri = substr($cb['uri'], 3);
                     $except = true;
                 }
@@ -587,10 +593,12 @@ class Route
         }
     }
 
-    /**
-     * Run and get a response.
-     */
-    public function end() {
+  /**
+   * Run and get a response.
+   * @throws Exception
+   */
+    #[NoReturn] public function end(): void
+    {
         ob_start();
         if ($this->matched && count($this->routeCallback)) {
             count($this->before) && $this->emit($this->before);
@@ -610,15 +618,15 @@ class Route
         exit;
     }
 
-    /**
-     * Call a route that has been matched.
-     *
-     * @param mixed $callback
-     * @param array $args
-     * @return string
-     * @throws \Exception
-     */
-    protected function callback($callback, array $args = [])
+  /**
+   * Call a route that has been matched.
+   *
+   * @param mixed $callback
+   * @param array $args
+   * @return false|string
+   * @throws Exception
+   */
+    protected function callback(mixed $callback, array $args = []): false|string|null
     {
         if (isset($callback)) {
             if (is_callable($callback) && $callback instanceof \Closure) {
@@ -626,16 +634,16 @@ class Route
                 $o = new \ArrayObject($args);
                 $o->app = App::instance();
                 $callback = $callback->bindTo($o);
-            } elseif (is_string($callback) && strpos($callback, '@') !== false) {
+            } elseif (is_string($callback) && str_contains($callback, '@')) {
                 $fixcallback = explode('@', $callback, 2);
                 $this->Controller = $fixcallback[0];
 
                 if (is_callable(
-                    $callback = [$fixcallback[0], (isset($fixcallback[1]) ? $fixcallback[1] : 'index')]
+                    $callback = [$fixcallback[0], ($fixcallback[1] ?? 'index')]
                 )) {
                     $this->Method = $callback[1];
                 } else {
-                    throw new \Exception("Callable error on {$callback[0]} -> {$callback[1]} !");
+                    throw new Exception("Callable error on {$callback[0]} -> {$callback[1]} !");
                 }
             }
 
@@ -661,7 +669,7 @@ class Route
      *
      * @return mixed
      */
-    public function __call($method, $args)
+    public function __call(string $method, array $args)
     {
         switch (strtoupper($method)) {
             case 'AS':

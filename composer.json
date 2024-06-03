@@ -1,5 +1,5 @@
 {
-    "name": "nezamy/route",
+    "name": "the-systems/route",
     "type": "library",
     "description": "Route - Fast, flexible routing for PHP, enabling you to quickly and easily build RESTful web applications.",
     "keywords": ["route", "restful", "api", "justframework"],
@@ -14,12 +14,15 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=8.3",
         "nezamy/support": "1.0.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.1.3"
     },
     "autoload": {
         "psr-4": {
-            "System\\": "system"
+            "TheSystems\\Router\\": "system"
         },
         "files": ["system/function.php"]
     },

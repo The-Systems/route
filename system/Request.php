@@ -10,7 +10,8 @@
  * @version     1.0.0
  */
 
-namespace System;
+
+namespace TheSystems\Router;
 /**
  * Request
  *
@@ -23,12 +24,50 @@ class Request
 {
     private static $instance;
 
+    public array $server;
+
+    public string $path;
+
+    public string $hostname;
+
+    public string $servername;
+
+    public bool $secure;
+
+    public ?int $port;
+
+    public string $protocol;
+
+    public string $url;
+
+    public string $curl;
+
+    public string $extension;
+
+    public array $headers;
+
+    public string $method;
+
+    public array $query;
+
+    public array $args;
+
+    public array $body;
+
+    public array $files;
+
+    public array $cookies;
+
+    public bool $ajax;
+
+
+
     /**
      * Constructor - Define some variables.
      */
     public function __construct()
     {
-        $this->server = $_SERVER;
+        $this->server = $_SERVER ?? [];
 
         $uri = parse_url($this->server["REQUEST_URI"], PHP_URL_PATH);
         $script = $_SERVER['SCRIPT_NAME'];
@@ -47,7 +86,7 @@ class Request
         $this->hostname = str_replace('/:(.*)$/', "", $_SERVER['HTTP_HOST']);
         $this->servername = empty($_SERVER['SERVER_NAME']) ? $this->hostname : $_SERVER['SERVER_NAME'];
         $this->secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https';
-        $this->port = isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : null;
+        $this->port = $_SERVER['SERVER_PORT'] ?? null;
         $this->protocol = $this->secure ? 'https' : 'http';
         $this->url = strtolower($this->protocol . '://' . $this->servername);
         if($this->servername == 'localhost'){
@@ -82,9 +121,9 @@ class Request
 
         $this->body = is_array($input) ? $input : [];
         $this->body = array_merge($this->body, $_POST);
-        $this->files = isset($_FILES) ? $_FILES : [];
+        $this->files = $_FILES ?? [];
         $this->cookies = $_COOKIE;
-        $x_requested_with = isset($this->headers['x_requested_with']) ? $this->headers['x_requested_with'] : false;
+        $x_requested_with = $this->headers['x_requested_with'] ?? false;
         $this->ajax = $x_requested_with === 'XMLHttpRequest';
     }
 
@@ -93,7 +132,7 @@ class Request
      *
      * @return $this
      */
-    public static function instance()
+    public static function instance(): static
     {
         if (null === static::$instance) {
             static::$instance = new static;
@@ -209,7 +248,7 @@ class Request
      *
      * @return mixed
      */
-    public function __call($method, $args)
+    public function __call(string $method, array $args)
     {
         return isset($this->{$method}) && is_callable($this->{$method})
             ? call_user_func_array($this->{$method}, $args) : null;
@@ -221,7 +260,7 @@ class Request
      * @param string $k
      * @param mixed $v
      */
-    public function __set($k, $v)
+    public function __set(string $k, mixed $v)
     {
         $this->{$k} = $v instanceof \Closure ? $v->bindTo($this) : $v;
     }
