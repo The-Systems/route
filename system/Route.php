@@ -629,12 +629,7 @@ class Route
     protected function callback(mixed $callback, array $args = []): false|string|null
     {
         if (isset($callback)) {
-            if (is_callable($callback) && $callback instanceof \Closure) {
-                // Set new object and append the callback with some data.
-                $o = new \ArrayObject($args);
-                $o->app = App::instance();
-                $callback = $callback->bindTo($o);
-            } elseif (is_string($callback) && str_contains($callback, '@')) {
+            if (is_string($callback) && str_contains($callback, '@')) {
                 $fixcallback = explode('@', $callback, 2);
                 $this->Controller = $fixcallback[0];
 
