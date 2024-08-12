@@ -56,7 +56,7 @@ class App
   public function autoload(): void
   {
     spl_autoload_register(function ($className) {
-      $className = str_replace("\\", DS, $className);
+      $className = str_replace("\\", "", $className);
       $classNameOnly = basename($className);
       $namespace = substr($className, 0, -strlen($classNameOnly));
       if (is_file($class = $this->baseDIR . "{$className}.php")) {
